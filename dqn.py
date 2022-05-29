@@ -41,7 +41,7 @@ class DQN(nn.Module):
         # Save hyperparameters needed in the DQN class.
         self.batch_size = env_config["batch_size"]
         self.gamma = env_config["gamma"]
-        self.epsilon = env_config['train.epsilon']
+        self.epsilon = env_config['epsilon']
         self.eps_start = env_config["eps_start"]
         self.eps_end = env_config["eps_end"]
         self.anneal_length = env_config["anneal_length"]
@@ -70,11 +70,26 @@ class DQN(nn.Module):
 
         if np.random.uniform(low=0.0, high=1.0) <= self.epsilon:
             # Random action.
-            action = int(np.random.randint(low=0, high=self.num_actions))
+            action = int(np.random.randint(low=0, high=self.n_actions))
         else:
             prediction = self(observation.squeeze())
             action = int(torch.argmax(prediction).item())
         return action
+
+
+def preprocess_sampled_batch(batch):
+    """Pre-processes a batch of samples from the memory.
+    Args:
+        batch (Batch): A batch of raw samples.
+    Returns:
+        Tuple[Tensor, Tensor, Tensor, Tensor, Tensor]: A batch of pre-processed samples;
+    """
+    obs = torch.stack(batch.obs)
+    next_obs = torch.stack(batch.next_obs)
+    actions = torch.Tensor(batch.actions).long().unsqueeze(1)
+    rewards = torch.Tensor(batch.rewards).long().unsqueeze(1)
+    dones = torch.Tensor(batch.dones).long().unsqueeze(1)
+    return obs, next_obs, actions, rewards, dones
 
 def optimize(dqn, target_dqn, memory, optimizer):
     """This function samples a batch from the replay buffer and optimizes the Q-network."""
@@ -86,13 +101,22 @@ def optimize(dqn, target_dqn, memory, optimizer):
     #       four tensors in total: observations, actions, next observations and rewards.
     #       Remember to move them to GPU if it is available, e.g., by using Tensor.to(device).
     #       Note that special care is needed for terminal transitions!
+    # Sample a batch from the replay memory.
+
+    batch = memory.sample(dqn.batch_size)
+    obs, next_obs, actions, rewards, dones = preprocess_sampled_batch(batch)
 
     # TODO: Compute the current estimates of the Q-values for each state-action
     #       pair (s,a). Here, torch.gather() is useful for selecting the Q-values
     #       corresponding to the chosen actions.
-    
+    # Compute the current estimates of the Q-values for each state-action pair (s,a).
+    q_values = dqn(obs).gather(1, actions)
+
+    next_q_values = target_dqn(next_obs).detach().max(1)[0].unsqueeze(1)
+
     # TODO: Compute the Q-value targets. Only do this for non-terminal transitions!
-    
+    q_value_targets = rewards + (dqn.gamma * next_q_values * (1 - dones))
+
     # Compute loss.
     loss = F.mse_loss(q_values.squeeze(), q_value_targets)
 

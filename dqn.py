@@ -84,11 +84,11 @@ def preprocess_sampled_batch(batch):
     Returns:
         Tuple[Tensor, Tensor, Tensor, Tensor, Tensor]: A batch of pre-processed samples;
     """
-    obs = torch.stack(batch[0])
-    next_obs = torch.stack(batch[2])
-    actions = torch.Tensor(batch[1]).long().unsqueeze(1)
-    rewards = torch.Tensor(batch[3]).long().unsqueeze(1)
-    dones = torch.Tensor(batch[4]).long().unsqueeze(1)
+    obs = torch.stack(batch[0]).to(device)
+    next_obs = torch.stack(batch[2]).to(device)
+    actions = torch.Tensor(batch[1]).long().unsqueeze(1).to(device)
+    rewards = torch.Tensor(batch[3]).long().unsqueeze(1).to(device)
+    dones = torch.Tensor(batch[4]).long().unsqueeze(1).to(device)
     return obs, next_obs, actions, rewards, dones
 
 def optimize(dqn, target_dqn, memory, optimizer):

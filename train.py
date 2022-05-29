@@ -53,7 +53,7 @@ if __name__ == '__main__':
             next_obs, reward, done, info = env.step(action)
 
             # Preprocess incoming observation.
-            next_obs = preprocess(obs, env=args.env).unsqueeze(0)
+            next_obs = preprocess(next_obs, env=args.env).unsqueeze(0)
             
             # TODO: Add the transition to the replay memory. Remember to convert
             #       everything to PyTorch tensors!

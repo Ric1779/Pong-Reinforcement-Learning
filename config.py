@@ -24,6 +24,7 @@ CartPole = {
     'train_frequency': 1,
     'gamma': 0.95,
     'lr': 1e-4,
+    'epsilon':0.1,
     'eps_start': 1.0,
     'eps_end': 0.05,
     'anneal_length': 10**4,

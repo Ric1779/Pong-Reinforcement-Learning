@@ -4,6 +4,7 @@ import gym
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -40,6 +41,7 @@ class DQN(nn.Module):
         # Save hyperparameters needed in the DQN class.
         self.batch_size = env_config["batch_size"]
         self.gamma = env_config["gamma"]
+        self.epsilon = env_config['train.epsilon']
         self.eps_start = env_config["eps_start"]
         self.eps_end = env_config["eps_end"]
         self.anneal_length = env_config["anneal_length"]
@@ -66,7 +68,13 @@ class DQN(nn.Module):
         #       the input would be a [32, 4] tensor and the output a [32, 1] tensor.
         # TODO: Implement epsilon-greedy exploration.
 
-        raise NotImplmentedError
+        if np.random.uniform(low=0.0, high=1.0) <= self.epsilon:
+            # Random action.
+            action = int(np.random.randint(low=0, high=self.num_actions))
+        else:
+            prediction = self(observation.squeeze())
+            action = int(torch.argmax(prediction).item())
+        return action
 
 def optimize(dqn, target_dqn, memory, optimizer):
     """This function samples a batch from the replay buffer and optimizes the Q-network."""

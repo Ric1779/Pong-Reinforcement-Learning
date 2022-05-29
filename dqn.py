@@ -18,11 +18,11 @@ class ReplayMemory:
     def __len__(self):
         return len(self.memory)
 
-    def push(self, obs, action, next_obs, reward):
+    def push(self, obs, action, next_obs, reward, done):
         if len(self.memory) < self.capacity:
             self.memory.append(None)
 
-        self.memory[self.position] = (obs, action, next_obs, reward)
+        self.memory[self.position] = (obs, action, next_obs, reward, done)
         self.position = (self.position + 1) % self.capacity
 
     def sample(self, batch_size):
@@ -84,11 +84,11 @@ def preprocess_sampled_batch(batch):
     Returns:
         Tuple[Tensor, Tensor, Tensor, Tensor, Tensor]: A batch of pre-processed samples;
     """
-    obs = torch.stack(batch.obs)
-    next_obs = torch.stack(batch.next_obs)
-    actions = torch.Tensor(batch.actions).long().unsqueeze(1)
-    rewards = torch.Tensor(batch.rewards).long().unsqueeze(1)
-    dones = torch.Tensor(batch.dones).long().unsqueeze(1)
+    obs = torch.stack(batch[0])
+    next_obs = torch.stack(batch[2])
+    actions = torch.Tensor(batch[1]).long().unsqueeze(1)
+    rewards = torch.Tensor(batch[3]).long().unsqueeze(1)
+    dones = torch.Tensor(batch[4]).long().unsqueeze(1)
     return obs, next_obs, actions, rewards, dones
 
 def optimize(dqn, target_dqn, memory, optimizer):

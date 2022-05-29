@@ -57,7 +57,7 @@ if __name__ == '__main__':
             
             # TODO: Add the transition to the replay memory. Remember to convert
             #       everything to PyTorch tensors!
-            memory.push(obs, action, next_obs, reward)
+            memory.push(obs, action, next_obs, reward, done)
 
             # TODO: Run DQN.optimize() every env_config["train_frequency"] steps.
             if steps % env_config["train_frequency"] == 0:
